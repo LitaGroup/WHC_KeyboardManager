@@ -29,18 +29,17 @@
 
 import UIKit
 
-extension NSNotification.Name {
+public extension NSNotification.Name {
     /// 获取下一个编辑框视图的通知
-    public static let NextFieldView: NSNotification.Name = NSNotification.Name(rawValue: "GetNextFieldViewNotification")
+    static let NextFieldView: NSNotification.Name = .init(rawValue: "GetNextFieldViewNotification")
     /// 获取当前编辑框视图的通知
-    public static let CurrentFieldView: NSNotification.Name = NSNotification.Name(rawValue: "GetCurrentFieldViewNotification")
+    static let CurrentFieldView: NSNotification.Name = .init(rawValue: "GetCurrentFieldViewNotification")
     /// 获取上一个编辑框视图的通知
-    public static let FrontFieldView: NSNotification.Name = NSNotification.Name(rawValue: "GetFrontFieldViewNotification")
+    static let FrontFieldView: NSNotification.Name = .init(rawValue: "GetFrontFieldViewNotification")
 }
 
-public class WHC_KeyboardManager: NSObject,UITextFieldDelegate {
-    
-    struct WHCObserve {
+public class WHC_KeyboardManager: NSObject, UITextFieldDelegate {
+    enum WHCObserve {
         static var kObserve = "WHCObserve"
     }
     
@@ -59,7 +58,7 @@ public class WHC_KeyboardManager: NSObject,UITextFieldDelegate {
                     if headerView == nil {
                         headerView = WHC_KeyboardHeaderView()
                     }
-                }else {
+                } else {
                     headerView = nil
                 }
             }
@@ -69,7 +68,14 @@ public class WHC_KeyboardManager: NSObject,UITextFieldDelegate {
             }
         }
         
-        //MARK: - 自定义键盘配置回调 -
+        public func setHeaderDoneButtonTittle(title: String) {
+            if let headerView = headerView as? WHC_KeyboardHeaderView {
+                headerView.setDoneButtonTittle(title: title)
+            }
+        }
+        
+        // MARK: - 自定义键盘配置回调 -
+
         /// 设置键盘挡住要移动视图的偏移量
         ///
         /// - parameter block: 回调block
@@ -88,11 +94,11 @@ public class WHC_KeyboardManager: NSObject,UITextFieldDelegate {
     /// 监视控制器和配置集合
     private var KeyboardConfigurations = [String: Configuration]()
     /// 当前的输入视图(UITextView/UITextField)
-    private(set) public var currentField: UIView!
+    public private(set) var currentField: UIView!
     /// 上一个输入视图
-    private(set) public var frontField: UIView!
+    public private(set) var frontField: UIView!
     /// 下一个输入视图
-    private(set) public var nextField: UIView!
+    public private(set) var nextField: UIView!
     /// 要监视处理的控制器集合
     private var monitorViewControllers = [String]()
     /// 当前监视处理的控制器
@@ -118,7 +124,7 @@ public class WHC_KeyboardManager: NSObject,UITextFieldDelegate {
     
     /// 单利对象
     public static var share: WHC_KeyboardManager {
-        struct WHC_KeyboardManagerInstance {
+        enum WHC_KeyboardManagerInstance {
             static let kbManager = WHC_KeyboardManager()
         }
         return WHC_KeyboardManagerInstance.kbManager
@@ -133,7 +139,8 @@ public class WHC_KeyboardManager: NSObject,UITextFieldDelegate {
         removeKeyboardObserver()
     }
     
-    //MARK: - 私有方法 -
+    // MARK: - 私有方法 -
+
     private func addKeyboardMonitor() {
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(notify:)), name: UIResponder.keyboardWillShowNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(notify:)), name: UIResponder.keyboardWillHideNotification, object: nil)
@@ -146,23 +153,22 @@ public class WHC_KeyboardManager: NSObject,UITextFieldDelegate {
     
     /// 检查是否是系统的私有滚动类
     private func checkIsPrivateContainerClass(_ view: UIView) -> Bool {
-        struct PrivateClass {
-            static var UITableViewCellScrollViewClass: UIScrollView.Type? =   NSClassFromString("UITableViewCellScrollView") as? UIScrollView.Type
+        enum PrivateClass {
+            static var UITableViewCellScrollViewClass: UIScrollView.Type? = NSClassFromString("UITableViewCellScrollView") as? UIScrollView.Type
             static var UITableViewWrapperViewClass: UIView.Type? = NSClassFromString("UITableViewWrapperView") as? UIView.Type
-            static var UIQueuingScrollViewClass: UIScrollView.Type? =   NSClassFromString("_UIQueuingScrollView") as? UIScrollView.Type
+            static var UIQueuingScrollViewClass: UIScrollView.Type? = NSClassFromString("_UIQueuingScrollView") as? UIScrollView.Type
         }
         return !((PrivateClass.UITableViewWrapperViewClass == nil || view.isKind(of: PrivateClass.UITableViewWrapperViewClass!) == false) &&
             (PrivateClass.UITableViewCellScrollViewClass == nil || view.isKind(of: PrivateClass.UITableViewCellScrollViewClass!) == false) &&
             (PrivateClass.UIQueuingScrollViewClass == nil || view.isKind(of: PrivateClass.UIQueuingScrollViewClass!) == false))
-        
     }
     
     /// 检查是否系统的私有输入类
     private func checkIsPrivateInputClass(_ view: UIView) -> Bool {
-        struct PrivateClass {
-            static var UISearchBarTextFieldClass: UITextField.Type? =   NSClassFromString("UISearchBarTextField") as? UITextField.Type
-            static var UIAlertSheetTextFieldClass: UITextField.Type? =   NSClassFromString("UIAlertSheetTextField") as? UITextField.Type
-            static var UIAlertSheetTextFieldClass_iOS8: UITextField.Type? =   NSClassFromString("_UIAlertControllerTextField") as? UITextField.Type
+        enum PrivateClass {
+            static var UISearchBarTextFieldClass: UITextField.Type? = NSClassFromString("UISearchBarTextField") as? UITextField.Type
+            static var UIAlertSheetTextFieldClass: UITextField.Type? = NSClassFromString("UIAlertSheetTextField") as? UITextField.Type
+            static var UIAlertSheetTextFieldClass_iOS8: UITextField.Type? = NSClassFromString("_UIAlertControllerTextField") as? UITextField.Type
         }
         return !((PrivateClass.UISearchBarTextFieldClass == nil || view.isKind(of: PrivateClass.UISearchBarTextFieldClass!) == false) && (PrivateClass.UIAlertSheetTextFieldClass == nil || view.isKind(of: PrivateClass.UIAlertSheetTextFieldClass!) == false) && (PrivateClass.UIAlertSheetTextFieldClass_iOS8 == nil || view.isKind(of: PrivateClass.UIAlertSheetTextFieldClass_iOS8!) == false))
     }
@@ -171,16 +177,16 @@ public class WHC_KeyboardManager: NSObject,UITextFieldDelegate {
     private func scanFrontNextField() {
         func startScan(view: UIView) -> [UIView] {
             var subFields = [UIView]()
-            if view.isUserInteractionEnabled && view.alpha != 0 && !view.isHidden {
+            if view.isUserInteractionEnabled, view.alpha != 0, !view.isHidden {
                 if view is UITextView {
-                    if !subFields.contains(view) && (view as! UITextView).isEditable {
+                    if !subFields.contains(view), (view as! UITextView).isEditable {
                         subFields.append(view)
                     }
-                }else if view is UITextField {
-                    if !subFields.contains(view) && (view as! UITextField).isEnabled && !checkIsPrivateInputClass(view) {
+                } else if view is UITextField {
+                    if !subFields.contains(view), (view as! UITextField).isEnabled, !checkIsPrivateInputClass(view) {
                         subFields.append(view)
                     }
-                }else if view.subviews.count != 0 {
+                } else if view.subviews.count != 0 {
                     for subView in view.subviews {
                         subFields.append(contentsOf: startScan(view: subView))
                     }
@@ -189,7 +195,7 @@ public class WHC_KeyboardManager: NSObject,UITextFieldDelegate {
             return subFields
         }
         var fields = startScan(view: getCurrentOffsetView())
-        fields.sort { (field1, field2) -> Bool in
+        fields.sort { field1, field2 -> Bool in
             let fieldConvertFrame1 = field1.convert(field1.bounds, to: currentMonitorViewController.view)
             let fieldConvertFrame2 = field2.convert(field1.bounds, to: currentMonitorViewController.view)
             let field1X = fieldConvertFrame1.minX
@@ -198,7 +204,7 @@ public class WHC_KeyboardManager: NSObject,UITextFieldDelegate {
             let field2Y = fieldConvertFrame2.minY
             return field1Y != field2Y ? field1Y < field2Y : field1X < field2X
         }
-        frontField = nil;nextField = nil
+        frontField = nil; nextField = nil
         let index = fields.firstIndex(of: currentField)
         if index != nil {
             if index! > 0 {
@@ -220,16 +226,17 @@ public class WHC_KeyboardManager: NSObject,UITextFieldDelegate {
             while let tempSuperview = superView?.superview {
                 if tempSuperview.isKind(of: UIScrollView.classForCoder()) ||
                     tempSuperview.isKind(of: UITableView.classForCoder()) ||
-                    tempSuperview.isKind(of: UICollectionView.classForCoder()) {
-                    if tempSuperview.isKind(of: UITextView.classForCoder()) == false && !checkIsPrivateContainerClass(tempSuperview) {
-                        if (tempSuperview as! UIScrollView).contentSize.height > tempSuperview.frame.height && (tempSuperview as! UIScrollView).isScrollEnabled {
+                    tempSuperview.isKind(of: UICollectionView.classForCoder())
+                {
+                    if tempSuperview.isKind(of: UITextView.classForCoder()) == false, !checkIsPrivateContainerClass(tempSuperview) {
+                        if (tempSuperview as! UIScrollView).contentSize.height > tempSuperview.frame.height, (tempSuperview as! UIScrollView).isScrollEnabled {
                             return tempSuperview
                         }
                     }
                 }
                 if NSStringFromClass(tempSuperview.classForCoder) == "UIViewControllerWrapperView" {
                     break
-                }else {
+                } else {
                     superView = tempSuperview
                 }
             }
@@ -239,9 +246,9 @@ public class WHC_KeyboardManager: NSObject,UITextFieldDelegate {
     }
     
     private func autoRemoveHeader() {
-        KeyboardConfigurations.forEach({ (key, value) in
+        KeyboardConfigurations.forEach { _, value in
             value.headerView?.removeFromSuperview()
-        })
+        }
         didShowHeader = false
     }
     
@@ -250,10 +257,10 @@ public class WHC_KeyboardManager: NSObject,UITextFieldDelegate {
         if keyboardFrame?.width == 0 {
             autoRemoveHeader()
             complete?()
-        }else {
+        } else {
             let headerView: UIView! = getCurrentConfig()?.headerView
             if headerView != nil {
-                let addHeaderViewConstraint = {(headerView: UIView) in
+                let addHeaderViewConstraint = { (headerView: UIView) in
                     headerView.superview?.addConstraint(NSLayoutConstraint(item: headerView, attribute: .left, relatedBy: .equal, toItem: headerView.superview!, attribute: .left, multiplier: 1, constant: 0))
                     
                     headerView.superview?.addConstraint(NSLayoutConstraint(item: headerView, attribute: .right, relatedBy: .equal, toItem: headerView.superview!, attribute: .right, multiplier: 1, constant: 0))
@@ -268,7 +275,7 @@ public class WHC_KeyboardManager: NSObject,UITextFieldDelegate {
                         headerView.translatesAutoresizingMaskIntoConstraints = false
                     }
                     addHeaderViewConstraint(headerView)
-                }else {
+                } else {
                     if !headerView.translatesAutoresizingMaskIntoConstraints {
                         for constraint in headerView.superview!.constraints {
                             if constraint.firstItem === headerView {
@@ -283,7 +290,7 @@ public class WHC_KeyboardManager: NSObject,UITextFieldDelegate {
                     let duration = keyboardDuration == nil ? 0.25 : keyboardDuration!
                     UIView.animate(withDuration: duration, delay: duration, options: .curveEaseOut, animations: {
                         headerView.alpha = 0.9
-                    }, completion: { (finished) in
+                    }, completion: { _ in
                         self.didShowHeader = true
                         complete?()
                     })
@@ -297,12 +304,13 @@ public class WHC_KeyboardManager: NSObject,UITextFieldDelegate {
         let KeyboardConfiguration = getCurrentConfig()
         let headerView: UIView! = KeyboardConfiguration?.headerView
         let offsetBlock = KeyboardConfiguration?.offsetBlock
-        if keyboardFrame != nil && keyboardFrame.height != 0 && currentField != nil && !checkIsPrivateInputClass(currentField) {
+        if keyboardFrame != nil, keyboardFrame.height != 0, currentField != nil, !checkIsPrivateInputClass(currentField) {
             if let moveView = getCurrentOffsetView() {
                 var moveScrollView: UIScrollView!
                 if moveView is UITableView ||
                     moveView is UIScrollView ||
-                    moveView is UICollectionView {
+                    moveView is UICollectionView
+                {
                     moveScrollView = moveView as? UIScrollView
                     var didObs = false
                     if let obs = objc_getAssociatedObject(moveScrollView!, &WHCObserve.kObserve) as? NSNumber {
@@ -314,7 +322,7 @@ public class WHC_KeyboardManager: NSObject,UITextFieldDelegate {
                         objc_setAssociatedObject(moveScrollView!, &WHCObserve.kObserve, NSNumber(value: true), .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
                         moveScrollView?.addObserver(self, forKeyPath: kContentOffset, options: NSKeyValueObservingOptions.new, context: nil)
                     }
-                }else {
+                } else {
                     if initMoveViewY == kNotInitValue {
                         initMoveViewY = moveView.frame.origin.y
                     }
@@ -322,8 +330,8 @@ public class WHC_KeyboardManager: NSObject,UITextFieldDelegate {
                 let convertView: UIView? = moveScrollView == nil ? currentMonitorViewController!.view : currentMonitorViewController!.view.window
                 var defaultOffset: CGFloat = 0
                 var convertRect = currentField.convert(currentField.bounds, to: convertView)
-                if convertView!.frame.height < UIScreen.main.bounds.height && currentMonitorViewController.navigationController != nil {
-                    if !currentMonitorViewController.navigationController!.isNavigationBarHidden && currentMonitorViewController.edgesForExtendedLayout == .all {
+                if convertView!.frame.height < UIScreen.main.bounds.height, currentMonitorViewController.navigationController != nil {
+                    if !currentMonitorViewController.navigationController!.isNavigationBarHidden, currentMonitorViewController.edgesForExtendedLayout == .all {
                         defaultOffset = currentMonitorViewController.navigationController!.navigationBar.frame.maxY
                     }
                     convertRect.origin.y += defaultOffset
@@ -333,7 +341,7 @@ public class WHC_KeyboardManager: NSObject,UITextFieldDelegate {
                 let headerHeight: CGFloat = headerView != nil ? headerView.frame.height : 0
                 var moveOffset: CGFloat = offsetBlock == nil ? headerHeight : offsetBlock!(currentField) + headerHeight
                 
-                if offsetBlock == nil && headerView == nil {
+                if offsetBlock == nil, headerView == nil {
                     if nextField != nil {
                         let nextFrame = nextField.convert(nextField.bounds, to: convertView)
                         moveOffset += nextFrame.maxY - convertRect.maxY
@@ -344,8 +352,8 @@ public class WHC_KeyboardManager: NSObject,UITextFieldDelegate {
                     sumOffsetY = max(sumOffsetY, -moveScrollView.contentInset.top)
                     UIView.animate(withDuration: moveViewAnimationDuration, animations: {
                         moveScrollView.contentOffset = CGPoint(x: moveScrollView.contentOffset.x, y: sumOffsetY)
-                    }, completion: { (success) in})
-                }else {
+                    }, completion: { _ in })
+                } else {
                     var sumOffsetY = -(moveOffset + yOffset)
                     sumOffsetY = min(initMoveViewY, sumOffsetY)
                     var moveViewFrame = moveView.frame
@@ -353,8 +361,8 @@ public class WHC_KeyboardManager: NSObject,UITextFieldDelegate {
                     moveDidAnimation = false
                     UIView.animate(withDuration: moveViewAnimationDuration, animations: {
                         moveView.frame = moveViewFrame
-                    }, completion: { (end) in
-                        if end && moveView.frame.minY != moveViewFrame.minY{
+                    }, completion: { end in
+                        if end, moveView.frame.minY != moveViewFrame.minY {
                             moveView.frame = moveViewFrame
                         }
                         self.moveDidAnimation = true
@@ -365,21 +373,21 @@ public class WHC_KeyboardManager: NSObject,UITextFieldDelegate {
     }
     
     private func setCurrentMonitorViewController() {
-        let topViewController = self.whc_CurrentViewController()
+        let topViewController = whc_CurrentViewController()
         currentMonitorViewController = nil
-        if topViewController != nil && monitorViewControllers.contains(topViewController!.description) {
+        if topViewController != nil, monitorViewControllers.contains(topViewController!.description) {
             currentMonitorViewController = topViewController
         }
     }
     
-    //MARK: - 公开接口Api -
+    // MARK: - 公开接口Api -
     
     /// 设置要监听处理键盘的控制器
     ///
     /// - parameter vc: 设置要监听的控制器
     /// return 返回默认的键盘头部配置对象
     @discardableResult
-    public func addMonitorViewController(_ vc:UIViewController) -> WHC_KeyboardManager.Configuration {
+    public func addMonitorViewController(_ vc: UIViewController) -> WHC_KeyboardManager.Configuration {
         let configuration = WHC_KeyboardManager.Configuration()
         KeyboardConfigurations.updateValue(configuration, forKey: vc.description)
         if !monitorViewControllers.contains(vc.description) {
@@ -395,7 +403,7 @@ public class WHC_KeyboardManager: NSObject,UITextFieldDelegate {
     /// 移除监听的控制器对象
     ///
     /// - parameter vc: 要移除的控制器
-    public func removeMonitorViewController(_ vc: UIViewController?) -> Void {
+    public func removeMonitorViewController(_ vc: UIViewController?) {
         if vc != nil {
             KeyboardConfigurations.removeValue(forKey: vc!.description)
             if monitorViewControllers.contains(vc!.description) {
@@ -403,7 +411,6 @@ public class WHC_KeyboardManager: NSObject,UITextFieldDelegate {
             }
         }
     }
-    
     
     /// 移除键盘管理监听
     public func removeKeyboardObserver() {
@@ -413,7 +420,8 @@ public class WHC_KeyboardManager: NSObject,UITextFieldDelegate {
         didRemoveKBObserve = true
     }
     
-    //MARK: - 发送通知 -
+    // MARK: - 发送通知 -
+
     private func sendFieldViewNotify() {
         if getCurrentConfig()?.headerView != nil {
             NotificationCenter.default.post(name: NSNotification.Name.CurrentFieldView, object: currentField)
@@ -424,7 +432,7 @@ public class WHC_KeyboardManager: NSObject,UITextFieldDelegate {
     
     private func getCurrentConfig() -> Configuration? {
         var config: Configuration!
-        if let currentVC = self.whc_CurrentViewController() {
+        if let currentVC = whc_CurrentViewController() {
             if let tmpConfig = KeyboardConfigurations[currentVC.description] {
                 config = tmpConfig
             }
@@ -438,7 +446,7 @@ public class WHC_KeyboardManager: NSObject,UITextFieldDelegate {
         if currentField == nil {
             setCurrentMonitorViewController()
         }
-        if currentMonitorViewController == nil {return}
+        if currentMonitorViewController == nil { return }
         let userInfo = notify.userInfo
         keyboardFrame = (userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue
         keyboardDuration = (userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? NSNumber)?.doubleValue
@@ -451,13 +459,14 @@ public class WHC_KeyboardManager: NSObject,UITextFieldDelegate {
         keyboardDuration = 0
         updateHeaderView(complete: nil)
         keyboardFrame = CGRect.zero
-        if currentField != nil && checkIsPrivateInputClass(currentField) {
+        if currentField != nil, checkIsPrivateInputClass(currentField) {
             return
         }
         if let moveView = getCurrentOffsetView() {
             if moveView is UITableView ||
                 moveView is UIScrollView ||
-                moveView is UICollectionView {
+                moveView is UICollectionView
+            {
                 let scrollMoveView = moveView as? UIScrollView
                 if scrollMoveView != nil {
                     if let obs = objc_getAssociatedObject(scrollMoveView!, &WHCObserve.kObserve) as? NSNumber {
@@ -469,26 +478,26 @@ public class WHC_KeyboardManager: NSObject,UITextFieldDelegate {
                     UIView.animate(withDuration: moveViewAnimationDuration, animations: {
                         if scrollMoveView!.contentOffset.y < -scrollMoveView!.contentInset.top {
                             scrollMoveView!.contentOffset = CGPoint(x: (scrollMoveView?.contentOffset.x)!, y: -scrollMoveView!.contentInset.top)
-                        }else if scrollMoveView!.contentOffset.y > (scrollMoveView!.contentSize.height - scrollMoveView!.bounds.height + scrollMoveView!.contentInset.bottom) {
+                        } else if scrollMoveView!.contentOffset.y > (scrollMoveView!.contentSize.height - scrollMoveView!.bounds.height + scrollMoveView!.contentInset.bottom) {
                             if scrollMoveView!.contentSize.height == 0 {
                                 scrollMoveView!.contentOffset = CGPoint(x: scrollMoveView!.contentOffset.x, y: -scrollMoveView!.contentInset.top)
-                            }else {
-                                scrollMoveView!.contentOffset = CGPoint(x: (scrollMoveView?.contentOffset.x)!, y: (scrollMoveView!.contentSize.height - scrollMoveView!.bounds.height + scrollMoveView!.contentInset.bottom))
+                            } else {
+                                scrollMoveView!.contentOffset = CGPoint(x: (scrollMoveView?.contentOffset.x)!, y: scrollMoveView!.contentSize.height - scrollMoveView!.bounds.height + scrollMoveView!.contentInset.bottom)
                             }
                         }
                     })
                 }
-            }else {
+            } else {
                 var moveViewFrame = moveView.frame
                 if initMoveViewY != kNotInitValue {
                     moveViewFrame.origin.y = initMoveViewY
                 }
                 /**** Give up the following method ***/
-                /*if currentMonitorViewController.view === moveView && currentMonitorViewController.navigationController != nil && (currentMonitorViewController.edgesForExtendedLayout == .none || !currentMonitorViewController.navigationController!.navigationBar.isTranslucent) && !currentMonitorViewController.navigationController!.isNavigationBarHidden {
+                /* if currentMonitorViewController.view === moveView && currentMonitorViewController.navigationController != nil && (currentMonitorViewController.edgesForExtendedLayout == .none || !currentMonitorViewController.navigationController!.navigationBar.isTranslucent) && !currentMonitorViewController.navigationController!.isNavigationBarHidden {
                  moveViewFrame.origin.y = currentMonitorViewController.navigationController!.navigationBar.frame.maxY
                  }else {
                  moveViewFrame.origin.y = 0
-                 }*/
+                 } */
                 initMoveViewY = kNotInitValue
                 UIView.animate(withDuration: moveViewAnimationDuration, animations: {
                     moveView.frame = moveViewFrame
@@ -497,14 +506,15 @@ public class WHC_KeyboardManager: NSObject,UITextFieldDelegate {
         }
     }
     
-    //MARK: - 滑动监听 -
-    override public func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
-        if currentMonitorViewController == nil {return}
-        if keyPath != nil && keyPath! == kContentOffset && currentField != nil {
+    // MARK: - 滑动监听 -
+
+    override public func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey: Any]?, context: UnsafeMutableRawPointer?) {
+        if currentMonitorViewController == nil { return }
+        if keyPath != nil, keyPath! == kContentOffset, currentField != nil {
             let contentOffset = (change?[.newKey] as? NSValue)?.cgPointValue
             if contentOffset != nil {
                 let scrollView = object as? UIScrollView
-                if scrollView != nil && (scrollView!.isDragging || scrollView!.isDecelerating) {
+                if scrollView != nil, scrollView!.isDragging || scrollView!.isDecelerating {
                     var convertRect = CGRect.zero
                     if let toView = currentMonitorViewController?.view.window {
                         convertRect = currentField.convert(currentField.bounds, to: toView)
@@ -513,9 +523,9 @@ public class WHC_KeyboardManager: NSObject,UITextFieldDelegate {
                     if yOffset > 0 || convertRect.minY < 0 {
                         if currentField is UITextView {
                             (currentField as! UITextView).resignFirstResponder()
-                        }else if currentField is UITextField {
+                        } else if currentField is UITextField {
                             (currentField as! UITextField).resignFirstResponder()
-                        }else {
+                        } else {
                             currentField.endEditing(true)
                         }
                     }
@@ -524,7 +534,8 @@ public class WHC_KeyboardManager: NSObject,UITextFieldDelegate {
         }
     }
     
-    //MARK: - 编辑通知 -
+    // MARK: - 编辑通知 -
+
     @objc private func myTextFieldDidBeginEditing(notify: Notification) {
         setCurrentMonitorViewController()
         if currentMonitorViewController != nil {
@@ -545,4 +556,3 @@ public class WHC_KeyboardManager: NSObject,UITextFieldDelegate {
         }
     }
 }
-

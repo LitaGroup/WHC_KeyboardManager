@@ -90,6 +90,11 @@ public class WHC_KeyboardHeaderView: UIView {
         }
     }
     
+    /// she设置done按钮的文案标题
+    public func setDoneButtonTittle(title:String) {
+        doneButton.setTitle(title, for: .normal)
+    }
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         self.backgroundColor = UIColor.clear
